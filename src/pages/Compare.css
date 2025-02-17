@@ -1,0 +1,337 @@
+.compare-page {
+    min-height: 100vh;
+    background: #f8f9fa;
+    padding: 2rem 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.compare-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #FFD95F;
+}
+
+.loan-application-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.loan-application-container::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: -20px;
+    right: -20px;
+    bottom: -20px;
+    background: rgba(255, 217, 95, 0.3);
+    border-radius: 20px;
+    z-index: -1;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.form-header h1 {
+    color: #333;
+    font-size: 2.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.form-header p {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.progress-bar {
+    position: relative;
+    height: 8px;
+    background: #eee;
+    border-radius: 50px;
+    margin: 2rem 0 4rem;
+    overflow: visible;
+}
+
+.progress-fill {
+    position: absolute;
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #81C784);
+    border-radius: 50px;
+    transition: width 0.4s ease;
+}
+
+.steps-indicator {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+}
+
+.step-dot {
+    width: 30px;
+    height: 30px;
+    background: #fff;
+    border: 3px solid #eee;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    position: relative;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.step-dot::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: #eee;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.step-dot.active {
+    border-color: #4CAF50;
+}
+
+.step-dot.active::before {
+    background: #4CAF50;
+    transform: scale(0.6);
+}
+
+/* Add step numbers */
+.step-dot::after {
+    content: attr(data-step);
+    position: absolute;
+    font-size: 14px;
+    color: #666;
+    transition: color 0.3s ease;
+}
+
+.step-dot.active::after {
+    color: #4CAF50;
+    font-weight: 500;
+}
+
+/* Add step labels */
+.steps-labels {
+    position: absolute;
+    top: 60px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 15px;
+}
+
+.step-label {
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+    transition: color 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.step-label.active {
+    color: #4CAF50;
+    font-weight: 500;
+}
+
+.loan-form {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Add smooth transitions */
+.form-step {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-step h2 {
+    color: #333;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #FFD95F;
+    box-shadow: 0 0 0 3px rgba(255, 217, 95, 0.2);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    gap: 1rem;
+}
+
+.back-button,
+.next-button,
+.submit-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.back-button {
+    background: transparent;
+    color: #666;
+    border: 2px solid #e0e0e0;
+}
+
+.back-button:hover {
+    background: #f8f9fa;
+    border-color: #666;
+    color: #333;
+}
+
+.next-button,
+.submit-button {
+    background: linear-gradient(135deg, #166fe5 0%, #1877f2 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 2px 4px rgba(22, 111, 229, 0.2);
+    margin-left: auto;
+}
+
+.next-button:hover,
+.submit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(22, 111, 229, 0.3);
+    background: linear-gradient(135deg, #1877f2 0%, #166fe5 100%);
+}
+
+.next-button:active,
+.submit-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(22, 111, 229, 0.2);
+}
+
+.next-button:disabled,
+.submit-button:disabled {
+    background: #e0e0e0;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Add a subtle pulse animation to the next button */
+@keyframes subtle-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.next-button:not(:disabled) {
+    animation: subtle-pulse 2s infinite;
+}
+
+.next-button:hover {
+    animation: none;
+}
+
+.security-info {
+    background: rgba(255, 217, 95, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 2rem;
+}
+
+.security-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #666;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.security-item svg {
+    color: #333;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .compare-page {
+        padding: 1rem;
+        align-items: flex-start;
+    }
+
+    .form-header h1 {
+        font-size: 1.75rem;
+    }
+
+    .loan-application-container::before {
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .back-button,
+    .next-button,
+    .submit-button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .next-button,
+    .submit-button {
+        margin-left: 0;
+    }
+} 

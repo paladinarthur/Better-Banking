@@ -1,0 +1,85 @@
+.loan-rates-container {
+    padding: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.loan-rates-container h2 {
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.loan-rates-table {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    background: #f8f9fa;
+    font-weight: bold;
+    padding: 1rem;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.table-row:last-child {
+    border-bottom: none;
+}
+
+.table-row:nth-child(even) {
+    background: #f8f9fa;
+}
+
+.rates-note {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.rates-note p {
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.rates-note ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    color: #666;
+}
+
+.rates-note li {
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .loan-rates-container {
+        padding: 1rem;
+    }
+
+    .table-header,
+    .table-row {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .table-header > div,
+    .table-row > div {
+        padding: 0.5rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .table-row > div:last-child {
+        border-bottom: none;
+    }
+} 
