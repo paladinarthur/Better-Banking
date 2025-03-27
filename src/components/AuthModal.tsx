@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AuthModal.css';
-import LoginForm from './LoginForm';
 
 interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onLoginSuccess: () => void;
 }
 
 interface FormData {
@@ -15,7 +13,7 @@ interface FormData {
     password: string;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     const [isLoginTab, setIsLoginTab] = useState(true);
     const [message, setMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -96,7 +94,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
             if (response.data?.token) {
                 localStorage.setItem('token', response.data.token);
                 setMessage(`${isLoginTab ? 'Login' : 'Signup'} successful!`);
-                onLoginSuccess();
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 1000);
             }
         } catch (error) {
             console.error('Auth error:', error);
@@ -190,8 +190,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
                         {message}
                     </div>
                 )}
-
-                <LoginForm onSuccess={onLoginSuccess} />
             </div>
         </div>
     );

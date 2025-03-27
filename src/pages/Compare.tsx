@@ -1,292 +1,138 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Lock, Shield, Plus, Trash } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Lock, Shield } from 'lucide-react';
 import './Compare.css';
-import { calculateCreditScore, getLoanEligibility } from '../utils/creditScore';
-import { formatNumberWithCommas, parseFormattedNumber } from '../utils/formatNumber';
-import axiosInstance from '../utils/axios';
 
-interface LoanHistory {
+interface PersonalInfo {
+    fullName: string;
+    email: string;
+    phone: string;
+}
+
+interface FormData {
+    loanPurpose: string;
     loanAmount: string;
-    emiAmount: string;
-    loanAge: string;
-    interestRate: string;
-}
-
-interface CompareFormData {
-    // Basic Information
-    fullName: string;
-    age: string;
-    cityRegion: string;
-    
-    // Financial & Employment Details
+    employmentType: string;
+    monthlyIncome: string;
+    creditScore: string;
+    urgency: string;
+    homeOwnership: string;
+    estimatedCreditScore: string;
+    directDeposit: string;
     annualIncome: string;
-    employmentType: 'Salaried' | 'Self-Employed' | 'Unemployed' | '';
-    yearsInCurrentJob: string;
-    
-    // Loan Details
-    desiredLoanAmount: string;
-    
-    // Previous Loans
-    hasPreviousLoans: 'Yes' | 'No' | '';
-    previousLoans: LoanHistory[];
-    
-    // Credit History
-    loanRejectionHistory: 'Yes' | 'No' | '';
-    
-    // Credit Card Usage
-    avgCreditCardUsage: string;
-}
-
-interface UserProfile {
-    fullName: string;
-    age: string;
+    personalInfo: PersonalInfo;
 }
 
 const Compare: React.FC = () => {
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState<number>(1);
-    const [formData, setFormData] = useState<CompareFormData>({
-        fullName: '',
-        age: '',
-        cityRegion: '',
-        annualIncome: '',
+    const [formData, setFormData] = useState<FormData>({
+        loanPurpose: '',
+        loanAmount: '',
         employmentType: '',
-        yearsInCurrentJob: '',
-        desiredLoanAmount: '',
-        hasPreviousLoans: '',
-        previousLoans: [],
-        loanRejectionHistory: '',
-        avgCreditCardUsage: ''
+        monthlyIncome: '',
+        creditScore: '',
+        urgency: '',
+        homeOwnership: '',
+        estimatedCreditScore: '',
+        directDeposit: '',
+        annualIncome: '',
+        personalInfo: {
+            fullName: '',
+            email: '',
+            phone: '',
+        },
     });
-    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [creditScore, setCreditScore] = useState<number | null>(null);
-    const [hasCompletedComparison, setHasCompletedComparison] = useState(false);
-    const [eligibilityData, setEligibilityData] = useState<any>(null);
 
-    const totalSteps = 4;
+    const totalSteps = 6;
     const progress = (currentStep / totalSteps) * 100;
 
-    useEffect(() => {
-        const fetchUserProfile = async () => {
-            try {
-                const response = await axiosInstance.get('/api/user/details');
-                if (response.data.success && response.data.user.profile) {
-                    setUserProfile({
-                        fullName: response.data.user.profile.fullName,
-                        age: response.data.user.profile.age
-                    });
-                }
-            } catch (error) {
-                console.error('Error fetching user profile:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+    const loanPurposes = [
+        'Home Renovation',
+        'Debt Consolidation',
+        'Medical Expenses',
+        'Education',
+        'Wedding',
+        'Business',
+        'Vehicle Purchase',
+        'Travel',
+        'Other'
+    ];
 
-        fetchUserProfile();
-    }, []);
+    const urgencyOptions = [
+        'Immediately',
+        'Within a week',
+        'Within a month'
+    ];
 
-    useEffect(() => {
-        // Load saved comparison data if it exists
-        const savedData = localStorage.getItem('comparisonData');
-        if (savedData) {
-            const { formData: savedFormData, creditScore: savedScore, completed } = JSON.parse(savedData);
-            setFormData(savedFormData);
-            setCreditScore(savedScore);
-            setHasCompletedComparison(completed);
-        }
-    }, []);
+    const homeOwnershipOptions = [
+        'Rent',
+        'Own'
+    ];
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const estimatedCreditScoreOptions = [
+        'Good',
+        'Average',
+        'Bad'
+    ];
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        
-        if (name === 'hasPreviousLoans' && value === 'Yes' && formData.previousLoans.length === 0) {
-            setFormData(prev => ({
+        if (name.includes('.')) {
+            const [parent, child] = name.split('.');
+            setFormData((prev) => ({
                 ...prev,
-                [name]: value,
-                previousLoans: [{
-                    loanAmount: '',
-                    emiAmount: '',
-                    loanAge: '',
-                    interestRate: ''
-                }]
-            }));
-        } else if (name === 'hasPreviousLoans' && value === 'No') {
-            setFormData(prev => ({
-                ...prev,
-                [name]: value,
-                previousLoans: []
-            }));
-        } else if (isAmountField(name)) {
-            // Only format if there's a value
-            const formattedValue = value ? formatNumberWithCommas(value) : '';
-            setFormData(prev => ({
-                ...prev,
-                [name]: formattedValue
+                [parent]: {
+                    ...prev[parent as keyof typeof prev],
+                    [child]: value
+                }
             }));
         } else {
-            setFormData(prev => ({
+            setFormData((prev) => ({
                 ...prev,
                 [name]: value
             }));
         }
     };
 
-    const handleLoanHistoryChange = (index: number, field: keyof LoanHistory, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            previousLoans: prev.previousLoans.map((loan, i) => 
-                i === index ? { 
-                    ...loan, 
-                    [field]: isAmountField(field) ? 
-                        (value ? formatNumberWithCommas(value) : '') : 
-                        value 
-                } : loan
-            )
-        }));
-    };
-
-    const addNewLoan = () => {
-        setFormData(prev => ({
-            ...prev,
-            previousLoans: [
-                ...prev.previousLoans,
-                { loanAmount: '', emiAmount: '', loanAge: '', interestRate: '' }
-            ]
-        }));
-    };
-
-    const removeLoan = (index: number) => {
-        if (formData.previousLoans.length > 1) {
-            setFormData(prev => ({
-                ...prev,
-                previousLoans: prev.previousLoans.filter((_, i) => i !== index)
-            }));
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        
+        switch (formData.loanPurpose) {
+            case 'Home Renovation':
+                navigate('/loans/home');
+                break;
+            case 'Vehicle Purchase':
+                navigate('/loans/car');
+                break;
+            case 'Purchasing Gold':
+                navigate('/loans/gold');
+                break;
+            default:
+                console.log('Form submitted:', formData);
         }
     };
 
-    const validateCurrentStep = (): boolean => {
+    const canContinue = (): boolean => {
         switch (currentStep) {
             case 1:
-                if (userProfile) {
-                    return Boolean(formData.cityRegion);
-                }
-                return Boolean(
-                    formData.fullName &&
-                    formData.age &&
-                    formData.cityRegion
-                );
-            case 2: // Financial & Employment
-                return Boolean(
-                    formData.annualIncome &&
-                    formData.employmentType &&
-                    formData.yearsInCurrentJob &&
-                    formData.desiredLoanAmount
-                );
-            case 3: // Loan History
-                if (formData.hasPreviousLoans === 'Yes') {
-                    return formData.previousLoans.every(loan => 
-                        loan.loanAmount && 
-                        loan.emiAmount && 
-                        loan.loanAge
-                    );
-                }
-                return formData.hasPreviousLoans === 'No' || formData.hasPreviousLoans === 'Yes';
-            case 4: // Credit History
-                return Boolean(
-                    formData.loanRejectionHistory &&
-                    formData.avgCreditCardUsage
-                );
+                return Boolean(formData.loanPurpose);
+            case 2:
+                return Boolean(formData.loanAmount);
+            case 3:
+                return Boolean(formData.employmentType && formData.monthlyIncome);
+            case 4:
+                return Boolean(formData.urgency);
+            case 5:
+                return Boolean(formData.homeOwnership && formData.estimatedCreditScore && 
+                       formData.directDeposit && formData.annualIncome);
+            case 6:
+                return Boolean(formData.personalInfo.fullName && 
+                       formData.personalInfo.email && 
+                       formData.personalInfo.phone);
             default:
                 return false;
         }
-    };
-
-    // Helper function to check if a field is an amount field
-    const isAmountField = (fieldName: string): boolean => {
-        return [
-            'annualIncome',
-            'desiredLoanAmount',
-            'avgCreditCardUsage',
-            'loanAmount',
-            'emiAmount'
-        ].includes(fieldName);
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            const parsedFormData = {
-                ...formData,
-                annualIncome: parseFormattedNumber(formData.annualIncome),
-                desiredLoanAmount: parseFormattedNumber(formData.desiredLoanAmount),
-                avgCreditCardUsage: parseFormattedNumber(formData.avgCreditCardUsage),
-                previousLoans: formData.previousLoans.map(loan => ({
-                    ...loan,
-                    loanAmount: parseFormattedNumber(loan.loanAmount),
-                    emiAmount: parseFormattedNumber(loan.emiAmount)
-                }))
-            };
-
-            // Calculate credit score
-            const calculatedScore = calculateCreditScore(parsedFormData);
-            setCreditScore(calculatedScore);
-
-            // Calculate eligibility for all loan types
-            const newEligibilityData = {
-                home: getLoanEligibility(calculatedScore, 'home'),
-                car: getLoanEligibility(calculatedScore, 'car'),
-                gold: getLoanEligibility(calculatedScore, 'gold')
-            };
-
-            // Set eligibility data in state
-            setEligibilityData(newEligibilityData);
-
-            // Save comparison data to localStorage
-            const comparisonData = {
-                formData: parsedFormData,
-                creditScore: calculatedScore,
-                eligibility: newEligibilityData,
-                completed: true
-            };
-            
-            localStorage.setItem('comparisonData', JSON.stringify(comparisonData));
-
-            // Save to backend
-            await axiosInstance.post('/api/user/comparison', {
-                formData: parsedFormData,
-                creditScore: calculatedScore,
-                eligibility: newEligibilityData
-            });
-
-            setHasCompletedComparison(true);
-
-        } catch (error) {
-            console.error('Error submitting comparison:', error);
-        }
-    };
-
-    const handleRecompare = () => {
-        localStorage.removeItem('comparisonData');
-        setFormData({
-            fullName: '',
-            age: '',
-            cityRegion: '',
-            annualIncome: '',
-            employmentType: '',
-            yearsInCurrentJob: '',
-            desiredLoanAmount: '',
-            hasPreviousLoans: '',
-            previousLoans: [],
-            loanRejectionHistory: '',
-            avgCreditCardUsage: ''
-        });
-        setCreditScore(null);
-        setHasCompletedComparison(false);
-        setCurrentStep(1);
     };
 
     const renderStep = () => {
@@ -294,279 +140,208 @@ const Compare: React.FC = () => {
             case 1:
                 return (
                     <div className="form-step">
-                        <h2>Basic Information</h2>
-                        {!userProfile ? (
-                            <>
-                                <div className="form-group">
-                                    <label>Full Name</label>
-                                    <input
-                                        type="text"
-                                        name="fullName"
-                                        value={formData.fullName}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Age</label>
-                                    <input
-                                        type="text"
-                                        name="age"
-                                        value={formData.age}
-                                        onChange={handleChange}
-                                        placeholder="0"
-                                        required
-                                    />
-                                </div>
-                            </>
-                        ) : null}
+                        <h2>Primary Reason for Selecting</h2>
                         <div className="form-group">
-                            <label>City/Region</label>
-                            <input
-                                type="text"
-                                name="cityRegion"
-                                value={formData.cityRegion}
-                                onChange={handleChange}
+                            <select
+                                name="loanPurpose"
+                                value={formData.loanPurpose}
+                                onChange={handleInputChange}
                                 required
-                            />
+                            >
+                                <option value="">Select primary reason</option>
+                                <option value="Home Renovation">Home Renovation</option>
+                                <option value="Vehicle Purchase">Vehicle Purchase</option>
+                                <option value="Purchasing Gold">Purchasing Gold</option>
+                                <option value="Debt Consolidation">Debt Consolidation</option>
+                                <option value="Business">Business</option>
+                                <option value="Education">Education</option>
+                                <option value="Medical Expenses">Medical Expenses</option>
+                                <option value="Other">Other</option>
+                            </select>
                         </div>
                     </div>
                 );
-
             case 2:
                 return (
                     <div className="form-step">
-                        <h2>Financial & Employment Details</h2>
+                        <h2>Loan Amount</h2>
                         <div className="form-group">
-                            <label>Annual Income</label>
-                            <div className="input-with-prefix">
-                                <span className="prefix">₹</span>
-                                <input
-                                    type="text"
-                                    name="annualIncome"
-                                    value={formData.annualIncome}
-                                    onChange={handleChange}
-                                    placeholder="0"
-                                    required
-                                />
-                            </div>
+                            <label>How much would you like to borrow?</label>
+                            <input
+                                type="number"
+                                name="loanAmount"
+                                value={formData.loanAmount}
+                                onChange={handleInputChange}
+                                placeholder="Enter amount"
+                                min="10000"
+                                max="1000000"
+                                required
+                            />
+                            <span className="input-hint">₹10,000 - ₹10,00,000</span>
                         </div>
+                    </div>
+                );
+            case 3:
+                return (
+                    <div className="form-step">
+                        <h2>Employment Details</h2>
                         <div className="form-group">
                             <label>Employment Type</label>
                             <select
                                 name="employmentType"
                                 value={formData.employmentType}
-                                onChange={handleChange}
+                                onChange={handleInputChange}
                                 required
                             >
-                                <option value="">Select...</option>
-                                <option value="Salaried">Salaried</option>
-                                <option value="Self-Employed">Self-Employed</option>
-                                <option value="Unemployed">Unemployed</option>
+                                <option value="">Select employment type</option>
+                                <option value="salaried">Salaried</option>
+                                <option value="self-employed">Self Employed</option>
+                                <option value="business">Business Owner</option>
                             </select>
                         </div>
                         <div className="form-group">
-                            <label>Years in Current Job/Business</label>
+                            <label>Monthly Income</label>
+                            <input
+                                type="number"
+                                name="monthlyIncome"
+                                value={formData.monthlyIncome}
+                                onChange={handleInputChange}
+                                placeholder="Enter monthly income"
+                                required
+                            />
+                        </div>
+                    </div>
+                );
+            case 4:
+                return (
+                    <div className="form-step">
+                        <h2>Loan Urgency</h2>
+                        <div className="form-group">
+                            <label>How soon do you need the loan?</label>
+                            <select
+                                name="urgency"
+                                value={formData.urgency}
+                                onChange={handleInputChange}
+                                required
+                            >
+                                <option value="">Select urgency</option>
+                                {urgencyOptions.map((option) => (
+                                    <option key={option} value={option}>
+                                        {option}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                );
+            case 5:
+                return (
+                    <div className="form-step">
+                        <h2>Additional Details</h2>
+                        <div className="form-group">
+                            <label>Home Ownership Status</label>
+                            <select
+                                name="homeOwnership"
+                                value={formData.homeOwnership}
+                                onChange={handleInputChange}
+                                required
+                            >
+                                <option value="">Select status</option>
+                                {homeOwnershipOptions.map((option) => (
+                                    <option key={option} value={option}>
+                                        {option}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Your Estimated Credit Score</label>
+                            <select
+                                name="estimatedCreditScore"
+                                value={formData.estimatedCreditScore}
+                                onChange={handleInputChange}
+                                required
+                            >
+                                <option value="">Select credit score</option>
+                                {estimatedCreditScoreOptions.map(option => (
+                                    <option key={option} value={option}>
+                                        {option}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Do you get paid via direct deposit?</label>
+                            <select
+                                name="directDeposit"
+                                value={formData.directDeposit}
+                                onChange={handleInputChange}
+                                required
+                            >
+                                <option value="">Select option</option>
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Annual Income Before Taxes</label>
+                            <input
+                                type="number"
+                                name="annualIncome"
+                                value={formData.annualIncome}
+                                onChange={handleInputChange}
+                                placeholder="Enter annual income"
+                                required
+                            />
+                        </div>
+                    </div>
+                );
+            case 6:
+                return (
+                    <div className="form-step">
+                        <h2>Personal Information</h2>
+                        <div className="form-group">
+                            <label>Full Name</label>
                             <input
                                 type="text"
-                                name="yearsInCurrentJob"
-                                value={formData.yearsInCurrentJob}
-                                onChange={handleChange}
-                                placeholder="0"
+                                name="personalInfo.fullName"
+                                value={formData.personalInfo.fullName}
+                                onChange={handleInputChange}
                                 required
                             />
                         </div>
                         <div className="form-group">
-                            <label>Desired Loan Amount</label>
-                            <div className="input-with-prefix">
-                                <span className="prefix">₹</span>
-                                <input
-                                    type="text"
-                                    name="desiredLoanAmount"
-                                    value={formData.desiredLoanAmount}
-                                    onChange={handleChange}
-                                    placeholder="0"
-                                    required
-                                />
-                            </div>
-                        </div>
-                    </div>
-                );
-
-            case 3:
-                return (
-                    <div className="form-step">
-                        <h2>Previous Loan History</h2>
-                        <div className="form-group">
-                            <label>Do you have any existing loans?</label>
-                            <select
-                                name="hasPreviousLoans"
-                                value={formData.hasPreviousLoans}
-                                onChange={handleChange}
+                            <label>Email</label>
+                            <input
+                                type="email"
+                                name="personalInfo.email"
+                                value={formData.personalInfo.email}
+                                onChange={handleInputChange}
                                 required
-                            >
-                                <option value="">Select...</option>
-                                <option value="Yes">Yes</option>
-                                <option value="No">No</option>
-                            </select>
+                            />
                         </div>
-
-                        {formData.hasPreviousLoans === 'Yes' && (
-                            <div className="loan-history-section">
-                                {formData.previousLoans.map((loan, index) => (
-                                    <div key={index} className="loan-entry">
-                                        <h3>Loan {index + 1}</h3>
-                                        <div className="loan-details-grid">
-                                            <div className="form-group">
-                                                <label>Loan Amount</label>
-                                                <div className="input-with-prefix">
-                                                    <span className="prefix">₹</span>
-                                                    <input
-                                                        type="text"
-                                                        value={loan.loanAmount}
-                                                        onChange={(e) => handleLoanHistoryChange(index, 'loanAmount', e.target.value)}
-                                                        placeholder="0"
-                                                        required
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="form-group">
-                                                <label>EMI Amount</label>
-                                                <div className="input-with-prefix">
-                                                    <span className="prefix">₹</span>
-                                                    <input
-                                                        type="text"
-                                                        value={loan.emiAmount}
-                                                        onChange={(e) => handleLoanHistoryChange(index, 'emiAmount', e.target.value)}
-                                                        placeholder="0"
-                                                        required
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Loan Age (Years)</label>
-                                                <input
-                                                    type="text"
-                                                    value={loan.loanAge}
-                                                    onChange={(e) => handleLoanHistoryChange(index, 'loanAge', e.target.value)}
-                                                    placeholder="0"
-                                                    required
-                                                />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Interest Rate (%)</label>
-                                                <input
-                                                    type="text"
-                                                    value={loan.interestRate}
-                                                    onChange={(e) => handleLoanHistoryChange(index, 'interestRate', e.target.value)}
-                                                    placeholder="0"
-                                                />
-                                            </div>
-                                        </div>
-                                        {index > 0 && (
-                                            <button
-                                                type="button"
-                                                onClick={() => removeLoan(index)}
-                                                className="remove-loan-btn"
-                                            >
-                                                <Trash size={16} /> Remove Loan
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
-                                <button
-                                    type="button"
-                                    onClick={addNewLoan}
-                                    className="add-loan-btn"
-                                >
-                                    <Plus size={16} /> Add Another Loan
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                );
-
-            case 4:
-                return (
-                    <div className="form-step">
-                        <h2>Credit History</h2>
                         <div className="form-group">
-                            <label>Have you faced loan rejection in the past year?</label>
-                            <select
-                                name="loanRejectionHistory"
-                                value={formData.loanRejectionHistory}
-                                onChange={handleChange}
+                            <label>Phone</label>
+                            <input
+                                type="tel"
+                                name="personalInfo.phone"
+                                value={formData.personalInfo.phone}
+                                onChange={handleInputChange}
                                 required
-                            >
-                                <option value="">Select...</option>
-                                <option value="Yes">Yes</option>
-                                <option value="No">No</option>
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label>Average Credit Card Usage (₹/month)</label>
-                            <div className="input-with-prefix">
-                                <span className="prefix">₹</span>
-                                <input
-                                    type="text"
-                                    name="avgCreditCardUsage"
-                                    value={formData.avgCreditCardUsage}
-                                    onChange={handleChange}
-                                    placeholder="0"
-                                    required
-                                />
-                            </div>
+                            />
                         </div>
                     </div>
                 );
-
             default:
                 return null;
         }
     };
 
-    if (isLoading) {
-        return <div>Loading...</div>;
-    }
-
-    if (hasCompletedComparison && creditScore && eligibilityData) {
-        return (
-            <div className="comparison-complete">
-                <h2>Comparison Complete</h2>
-                <div className="credit-score">
-                    <p>Your Credit Score</p>
-                    <span>{creditScore}</span>
-                </div>
-                <div className="action-buttons">
-                    <button onClick={handleRecompare} className="recompare-button">
-                        Start New Comparison
-                    </button>
-                    <button 
-                        onClick={() => {
-                            if (creditScore && eligibilityData) {
-                                const stateData = {
-                                    creditScore,
-                                    eligibility: eligibilityData,
-                                    userData: formData
-                                };
-                                console.log('Navigating with state:', stateData); // Debug log
-                                navigate('/loan-eligibility', { state: stateData });
-                            }
-                        }} 
-                        className="view-results-button"
-                    >
-                        View Results
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="compare-page">
             <div className="loan-application-container">
                 <div className="form-header">
-                    <h1>Loan Comparison Details</h1>
+                    <h1>Personal Loan Application</h1>
                     <p>Complete your application in just a few steps</p>
                 </div>
 
@@ -603,7 +378,7 @@ const Compare: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => setCurrentStep(prev => prev + 1)}
-                                disabled={!validateCurrentStep()}
+                                disabled={!canContinue()}
                                 className="next-button"
                             >
                                 Next <ArrowRight size={16} />
@@ -612,9 +387,9 @@ const Compare: React.FC = () => {
                             <button 
                                 type="submit" 
                                 className="submit-button"
-                                disabled={!validateCurrentStep()}
+                                disabled={!canContinue()}
                             >
-                                Submit Comparison
+                                Submit Application
                             </button>
                         )}
                     </div>

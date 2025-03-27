@@ -1,30 +1,21 @@
 import mongoose from 'mongoose';
 
 const ComparisonSchema = new mongoose.Schema({
-    formData: {
-        fullName: String,
-        age: String,
-        cityRegion: String,
-        annualIncome: String,
+    comparison: {
+        loanAmount: String,
+        loanType: String,
         employmentType: String,
-        yearsInCurrentJob: String,
-        desiredLoanAmount: String,
-        hasPreviousLoans: String,
-        previousLoans: [{
-            loanAmount: String,
-            emiAmount: String,
-            loanAge: String,
-            interestRate: String
-        }],
-        loanRejectionHistory: String,
-        avgCreditCardUsage: String
+        monthlyIncome: String,
+        cibilScore: String
     },
-    creditScore: Number,
-    eligibility: {
-        home: Object,
-        car: Object,
-        gold: Object
-    },
+    results: [{
+        bankName: String,
+        interestRate: String,
+        emi: Number,
+        eligibleAmount: Number,
+        processingFee: String,
+        tenure: Number
+    }],
     date: {
         type: Date,
         default: Date.now
@@ -47,14 +38,38 @@ const UserSchema = new mongoose.Schema({
         required: true
     },
     profile: {
-        fullName: String,
-        phone: String,
-        address: String,
-        dateOfBirth: String,
-        age: String,
-        panCard: String,
-        aadharNumber: String,
-        occupation: String
+        fullName: {
+            type: String,
+            default: ''
+        },
+        dateOfBirth: {
+            type: String,
+            default: ''
+        },
+        phone: {
+            type: String,
+            default: ''
+        },
+        address: {
+            type: String,
+            default: ''
+        },
+        panCard: {
+            type: String,
+            default: ''
+        },
+        aadharNumber: {
+            type: String,
+            default: ''
+        },
+        occupation: {
+            type: String,
+            default: ''
+        },
+        annualIncome: {
+            type: Number,
+            default: 0
+        }
     },
     bankingDetails: {
         accountNumber: String,

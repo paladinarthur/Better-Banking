@@ -8,24 +8,7 @@ const router = express.Router();
 // Signup Route
 router.post('/signup', async (req, res) => {
     try {
-        const { 
-            username, 
-            email, 
-            password,
-            fullName,
-            age,
-            cityRegion,
-            annualIncome,
-            totalLoanAmount,
-            monthlyEMI,
-            avgCreditCardUsage,
-            oldestLoanAge,
-            emiPaymentHistory,
-            loanRejection,
-            employmentType,
-            yearsInCurrentJob,
-            recentLoanApplications
-        } = req.body;
+        const { username, email, password } = req.body;
 
         // Log the request body
         console.log('Signup request:', { username, email });
@@ -44,20 +27,15 @@ router.post('/signup', async (req, res) => {
             username,
             email,
             password,
-            profile: {
-                fullName,
-                age,
-                cityRegion,
-                annualIncome,
-                totalLoanAmount,
-                monthlyEMI,
-                avgCreditCardUsage,
-                oldestLoanAge,
-                emiPaymentHistory,
-                loanRejection,
-                employmentType,
-                yearsInCurrentJob,
-                recentLoanApplications
+            profile: {  // Initialize empty profile
+                fullName: '',
+                dateOfBirth: '',
+                phone: '',
+                address: '',
+                panCard: '',
+                aadharNumber: '',
+                occupation: '',
+                annualIncome: 0
             }
         });
 
@@ -135,16 +113,7 @@ router.post('/login', async (req, res) => {
             { expiresIn: '1h' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ 
-                    success: true,
-                    token,
-                    user: {
-                        _id: user._id,
-                        email: user.email,
-                        username: user.username,
-                        profile: user.profile
-                    }
-                });
+                res.json({ token });
             }
         );
     } catch (error) {
